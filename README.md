@@ -218,13 +218,13 @@ Pipeline tiền xử lý và mô hình được đảm bảo thống nhất gi�
 BTLMachineLearning/
 │
 ├── app/
-│   (Thư mục dự kiến dùng để triển khai các bước tiền xử lý dữ liệu, huấn luyện dữ liệu
-│     và mở rộng trong tương lai)
+│   └── (Thư mục dự kiến dùng để triển khai các bước tiền xử lý dữ liệu,
+│       huấn luyện mô hình và mở rộng trong tương lai)
 │
 ├── demo/
 │   ├── BTLAI.ipynb
-│   │   Notebook dùng để tiền xử lý dữ liệu, trực quan hóa, demo huấn luyện, đánh giá
-│   │   và thử nghiệm dự đoán GPA
+│   │   Notebook dùng để tiền xử lý dữ liệu, trực quan hóa,
+│   │   demo huấn luyện, đánh giá và thử nghiệm dự đoán GPA
 │   │
 │   └── demo.py
 │       Script Python dùng để chạy demo dự đoán GPA
@@ -254,6 +254,7 @@ BTLMachineLearning/
 │
 └── .gitignore
     Các file/thư mục không đẩy lên GitHub
+
 
 ## 8.Tác giả
 
