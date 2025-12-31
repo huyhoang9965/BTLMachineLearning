@@ -215,6 +215,8 @@ Trong trường hợp đó, người dùng cần huấn luyện lại mô hình 
 Pipeline tiền xử lý và mô hình được đảm bảo thống nhất giữa quá trình huấn luyện và suy luận.
 
 ## 7. Cấu trúc thư mục dự án
+
+```text
 BTLMachineLearning/
 │
 ├── app/
