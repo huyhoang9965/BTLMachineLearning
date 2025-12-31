@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Demo ML – Dự đoán điểm thi</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        * { box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+        body {
+            margin: 0;
+            background: linear-gradient(120deg, #74ebd5, #9face6);
+            min-height: 100vh;
+        }
+        .container { max-width: 1100px; margin: auto; padding: 40px 20px; }
+        .header { display: flex; align-items: center; gap: 20px; margin-bottom: 30px; }
+        .header img { width: 80px; }
+        .card {
+            background: #ffffff;
+            border-radius: 18px;
+            padding: 30px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.12);
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
+        }
+        label { font-weight: 500; }
+        input, select {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: 1px solid #ccc;
+            margin-top: 6px;
+        }
+        button {
+            margin-top: 30px;
+            width: 100%;
+            padding: 15px;
+            border-radius: 16px;
+            border: none;
+            background: linear-gradient(135deg, #6c5ce7, #00cec9);
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .result-box {
+            margin-top: 40px;
+            padding: 30px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, #00cec9, #6c5ce7);
+            color: white;
+            text-align: center;
+        }
+        .score { font-size: 60px; font-weight: 700; }
+
+        .error-box {
+            margin-top: 25px;
+            padding: 16px;
+            border-radius: 12px;
+            background: #ffe6e6;
+            color: #b00020;
+            font-weight: 500;
+            line-height: 1.6;
+        }
+    </style>
+</head>
+
+<body>
+<div class="container">
+
+    <div class="header">
+        <img src="https://cdn-icons-png.flaticon.com/512/4712/4712109.png">
+        <div>
+            <h1>Demo Machine Learning</h1>
+            <p>Dự đoán điểm thi sinh viên</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <form method="POST">
+            {% set f = form_data %}
+            <div class="grid">
+
+                <!-- MODEL -->
+                <div>
+                    <label>🤖 Chọn mô hình</label>
+                    <select name="model" required>
+                        <option value="">-- Chọn --</option>
+                        {% for m in ["Random Forest","XGBoost","Linear Regression","Gradient Boosting"] %}
+                        <option value="{{m}}" {% if f.get('model')==m %}selected{% endif %}>{{m}}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- NUMERIC -->
+                <div>
+                    <label>Giờ học mỗi ngày (0–10)</label>
+                    <input type="number" min="0" max="10" step="0.1"
+                           name="Giờ học mỗi ngày" required
+                           value="{{ f.get('Giờ học mỗi ngày','') }}">
+                </div>
+
+                <div>
+                    <label>Giờ sử dụng mạng xã hội (0–8)</label>
+                    <input type="number" min="0" max="8" step="0.1"
+                           name="Giờ sử dụng mạng xã hội" required
+                           value="{{ f.get('Giờ sử dụng mạng xã hội','') }}">
+                </div>
+
+                <div>
+                    <label>Tỷ lệ điểm danh (%) (60–100)</label>
+                    <input type="number" min="60" max="100"
+                           name="Tỷ lệ điểm danh (%)" required
+                           value="{{ f.get('Tỷ lệ điểm danh (%)','') }}">
+                </div>
+
+                <div>
+                    <label>Giờ ngủ (4–10)</label>
+                    <input type="number" min="4" max="10" step="0.1"
+                           name="Giờ ngủ" required
+                           value="{{ f.get('Giờ ngủ','') }}">
+                </div>
+
+                <div>
+                    <label>Thời gian dùng màn hình (0–12)</label>
+                    <input type="number" min="0" max="12" step="0.1"
+                           name="Thời gian dùng màn hình" required
+                           value="{{ f.get('Thời gian dùng màn hình','') }}">
+                </div>
+
+                <div>
+                    <label>GPA học kỳ trước (0–4)</label>
+                    <input type="number" min="0" max="4" step="0.01"
+                           name="GPA học kỳ trước" required
+                           value="{{ f.get('GPA học kỳ trước','') }}">
+                </div>
+
+                <!-- BINARY -->
+                {% for name in ["Làm thêm","Nguy cơ bỏ học","Tiếp cận lớp phụ đạo / gia sư"] %}
+                <div>
+                    <label>{{ name }}</label>
+                    <select name="{{ name }}" required>
+                        <option value="">-- Chọn --</option>
+                        <option value="0" {% if f.get(name)=='0' %}selected{% endif %}>Không</option>
+                        <option value="1" {% if f.get(name)=='1' %}selected{% endif %}>Có</option>
+                    </select>
+                </div>
+                {% endfor %}
+
+                <!-- ORDINAL 0–7 -->
+                <div>
+                    <label>Tần suất tập thể dục (0–7)</label>
+                    <select name="Tần suất tập thể dục" required>
+                        <option value="">-- Chọn --</option>
+                        {% for i in range(0,8) %}
+                        <option value="{{ i }}" {% if f.get('Tần suất tập thể dục')==i|string %}selected{% endif %}>{{ i }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- ORDINAL 1–5 -->
+                {% for name in ["Chất lượng chế độ ăn","Môi trường học tập"] %}
+                <div>
+                    <label>{{ name }} (1–5)</label>
+                    <select name="{{ name }}" required>
+                        <option value="">-- Chọn --</option>
+                        {% for i in range(1,6) %}
+                        <option value="{{ i }}" {% if f.get(name)==i|string %}selected{% endif %}>{{ i }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endfor %}
+
+                <!-- ORDINAL 1–10 -->
+                {% for name in [
+                "Đánh giá sức khỏe tinh thần",
+                "Mức độ căng thẳng",
+                "Mức độ hỗ trợ của cha mẹ",
+                "Mức độ động lực",
+                "Mức độ lo âu khi thi",
+                "Điểm quản lý thời gian"
+                ] %}
+                <div>
+                    <label>{{ name }} (1–10)</label>
+                    <select name="{{ name }}" required>
+                        <option value="">-- Chọn --</option>
+                        {% for i in range(1,11) %}
+                        <option value="{{ i }}" {% if f.get(name)==i|string %}selected{% endif %}>{{ i }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                {% endfor %}
+
+                <!-- LEARNING STYLE -->
+                <div>
+                    <label>Phong cách học tập (1–4)</label>
+                    <select name="Phong cách học tập" required>
+                        <option value="">-- Chọn --</option>
+                        <option value="1" {% if f.get('Phong cách học tập')=='1' %}selected{% endif %}>1 – Visual</option>
+                        <option value="2" {% if f.get('Phong cách học tập')=='2' %}selected{% endif %}>2 – Auditory</option>
+                        <option value="3" {% if f.get('Phong cách học tập')=='3' %}selected{% endif %}>3 – Reading/Writing</option>
+                        <option value="4" {% if f.get('Phong cách học tập')=='4' %}selected{% endif %}>4 – Kinesthetic</option>
+                    </select>
+                </div>
+
+            </div>
+
+            <button type="submit">🔮 Dự đoán</button>
+        </form>
+
+        {% if error %}
+        <div class="error-box">
+            ⚠️ <b>Dữ liệu đầu vào không hợp lệ:</b><br>
+            {{ error | safe }}
+        </div>
+        {% endif %}
+
+        {% if prediction is not none %}
+        <div class="result-box">
+            <h2>Kết quả dự đoán</h2>
+            <div class="score">{{ prediction | round(2) }}</div>
+            <p>Mô hình: <b>{{ selected_model }}</b></p>
+        </div>
+        {% endif %}
+
+    </div>
+</div>
+</body>
+</html>
